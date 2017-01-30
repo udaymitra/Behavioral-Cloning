@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers import Conv2D, ConvLSTM2D, Dense, MaxPooling2D, Dropout, Flatten, ELU, Convolution2D
 from keras.optimizers import Adam
 from sklearn.utils import shuffle
+import model_reader
 
 import image_util
 from input_reader_helper import *
@@ -18,6 +19,7 @@ flags.DEFINE_integer('batch_size', 128, 'The minibatch size.')
 flags.DEFINE_integer('num_epochs', 10, 'The number of epochs to train for.')
 flags.DEFINE_float('lrate', 0.0001, 'The learning rate for training.')
 flags.DEFINE_string('output_dir', 'training_out', 'Output directory to save model.')
+flags.DEFINE_string('model', '', 'pre-trained model file path')
 
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
@@ -25,7 +27,7 @@ def main(_):
     train_images_size = 0.9 * len(drive_entries) * 4
     val_images_size = 0.1 * len(drive_entries) * 4
 
-    model = getNvidiaModel(FLAGS.lrate)
+    model = model_reader.read_model(FLAGS.model) if FLAGS.model else getNvidiaModel(FLAGS.lrate)
     model.fit_generator(train_generator,
                         samples_per_epoch = train_images_size,
                         nb_epoch=FLAGS.num_epochs,

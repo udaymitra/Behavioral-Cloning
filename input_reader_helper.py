@@ -1,7 +1,7 @@
 import csv
 from os import listdir
 from os.path import join
-import image_util
+from image_util import *
 import numpy as np
 from sklearn.utils import shuffle
 
@@ -14,9 +14,9 @@ class DriveLogEntry:
         self.left_file_path = join(base_dir, csv_entry[1].split('/')[-1])
         self.right_file_path = join(base_dir, csv_entry[2].split('/')[-1])
 
-        self.center_image = image_util.read_image(self.center_file_path)
-        self.left_image = image_util.read_image(self.left_file_path)
-        self.right_image = image_util.read_image(self.right_file_path)
+        self.center_image = read_image(self.center_file_path)
+        self.left_image = read_image(self.left_file_path)
+        self.right_image = read_image(self.right_file_path)
 
         self.steering = float(csv_entry[3])
 
@@ -26,9 +26,13 @@ class DriveLogEntry:
     # If normalize method is passed in, then applies normalization on all the images
     def get_training_data(self, normalize_method=None):
         data = [(self.center_image, self.steering),
+                (add_random_shadow(self.center_image), self.steering),
                 (self.left_image, self.steering - CAMERA_LEFT_RIGHTOFFSET),
+                (add_random_shadow(self.left_image), self.steering - CAMERA_LEFT_RIGHTOFFSET),
                 (self.right_image, self.steering + CAMERA_LEFT_RIGHTOFFSET),
-                (image_util.flipimage(self.center_image), -1 * self.steering)]
+                (add_random_shadow(self.right_image), self.steering + CAMERA_LEFT_RIGHTOFFSET),
+                (flipimage(self.center_image), -1 * self.steering),
+                (add_random_shadow(flipimage(self.center_image)), -1 * self.steering)]
         if (normalize_method):
             data = [(normalize_method(entry[0]), entry[1]) for entry in data]
         return data
