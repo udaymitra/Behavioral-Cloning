@@ -25,8 +25,7 @@ def main(_):
     train_images_size = 0.9 * len(drive_entries) * 4
     val_images_size = 0.1 * len(drive_entries) * 4
 
-    model = getNvidiaModel()
-    model.compile(optimizer=Adam(lr=FLAGS.lrate), loss='mse')
+    model = getNvidiaModel(FLAGS.lrate)
     model.fit_generator(train_generator,
                         samples_per_epoch = train_images_size,
                         nb_epoch=FLAGS.num_epochs,
@@ -38,7 +37,7 @@ def main(_):
     with open(FLAGS.output_dir + '/model.json', 'w') as f:
         f.write(json)
 
-def getNvidiaModel():
+def getNvidiaModel(learning_rate):
     ch, row, col = 3, 66, 200  # camera format
     model = Sequential([
         Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='relu'),
@@ -54,9 +53,10 @@ def getNvidiaModel():
         Dense(10, activation='relu'),
         Dense(1, name='output', activation='tanh'),
     ])
+    model.compile(optimizer=Adam(lr=learning_rate), loss='mse')
     return model
 
-def getCommaAiModel():
+def getCommaAiModel(learning_rate):
     ch, row, col = 3, 160, 320  # camera format
 
     model = Sequential()
@@ -72,10 +72,10 @@ def getCommaAiModel():
     model.add(Dropout(.5))
     model.add(ELU())
     model.add(Dense(1))
-
+    model.compile(optimizer=Adam(lr=learning_rate), loss='mse')
     return model
 
-def getModel():
+def getModel(learning_rate):
     # input image is of shape 80x160x3
     model = Sequential([
         Conv2D(nb_filter=32, nb_row=6, nb_col=3, input_shape=(80, 160, 3), border_mode='valid', activation='relu'),
@@ -97,6 +97,7 @@ def getModel():
         Dense(128, activation='relu'),
         Dense(1, name='output', activation='tanh'),
     ])
+    model.compile(optimizer=Adam(lr=learning_rate), loss='mse')
     return model
 
 if __name__ == '__main__':

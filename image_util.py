@@ -36,7 +36,7 @@ def flipimage(image):
 # ax2 = f2.add_subplot(111)
 # ax2.plot(range(10,20))
 # plt.show()
-    
+
 # plt.subplot(2,1,1)
 # plt.imshow(img)
 # plt.subplot(2,1,2)
