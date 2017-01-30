@@ -21,27 +21,17 @@ flags.DEFINE_string('output_dir', 'training_out', 'Output directory to save mode
 
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
-    (images, labels) = get_training_data(drive_entries, image_util.normalize_image)
-
-    # split to train(90%) and validation(10%)
-    images, labels = shuffle(images, labels)
-    num_train_examples = int(len(images) * 0.9)
-    train_images = images[:num_train_examples]
-    train_labels = labels[:num_train_examples]
-    val_images = images[num_train_examples:]
-    val_labels = images[num_train_examples:]
-
-    print("images: %d"%len(images))
-    print("train_images: %d"%len(train_images))
-    print("val_images: %d" % len(val_images))
-
-    train_generator = get_training_data_generator(train_images, train_labels, FLAGS.batch_size)
-    val_generator = get_training_data_generator(val_images, val_labels, FLAGS.batch_size)
+    (train_generator, val_generator) = get_training_and_valid_data_generators(drive_entries, FLAGS.batch_size, image_util.normalize_image)
+    train_images_size = 0.9 * len(drive_entries) * 4
+    val_images_size = 0.1 * len(drive_entries) * 4
 
     model = getCommaAiModel()
     model.compile(optimizer=Adam(lr=FLAGS.lrate), loss='mse')
-    model.fit_generator(train_generator, samples_per_epoch = len(train_images), nb_epoch=10,
-                        validation_data=val_generator, nb_val_samples=len(val_images))
+    model.fit_generator(train_generator,
+                        samples_per_epoch = train_images_size,
+                        nb_epoch=10,
+                        validation_data=val_generator,
+                        nb_val_samples=val_images_size)
 
     json = model.to_json()
     model.save_weights(FLAGS.output_dir + '/model.h5')

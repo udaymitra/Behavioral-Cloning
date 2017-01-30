@@ -3,6 +3,7 @@ from os import listdir
 from os.path import join
 import image_util
 import numpy as np
+from sklearn.utils import shuffle
 
 CAMERA_LEFT_RIGHTOFFSET = 0.2
 
@@ -63,4 +64,32 @@ def get_training_data_generator(images, labels, batch_size=128):
             random = int(np.random.choice(num_examples, 1))
             out_images.append(images[random])
             out_labels.append(labels[random])
+        yield np.array(out_images), np.array(out_labels)
+
+def get_generator(drive_entries, batch_size=128, normalize_method=None):
+    num_examples = len(drive_entries)
+    while True:
+        out_images = []
+        out_labels = []
+        num_batch_examples = 0
+        while num_batch_examples < batch_size:
+            random = int(np.random.choice(num_examples, 1))
+            drive_entry = drive_entries[random]
+            data = drive_entry.get_training_data(normalize_method)
+            num_batch_examples += len(data)
+            images_and_labels = [list(t) for t in zip(*data)]
+            out_images.extend(images_and_labels[0])
+            out_labels.extend(images_and_labels[1])
         yield (np.array(out_images), np.array(out_labels))
+
+def get_training_and_valid_data_generators(drive_entries, batch_size=128, normalize_method=None):
+    shuffle(drive_entries)
+    num_entries = len(drive_entries)
+    # split into train and val
+    num_train = int(0.9 * num_entries)
+    train_drive_entries = drive_entries[:num_train]
+    val_drive_entries = drive_entries[num_train:]
+    return (get_generator(train_drive_entries, batch_size, normalize_method),
+            get_generator(val_drive_entries, batch_size, normalize_method))
+
+
