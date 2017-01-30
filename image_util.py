@@ -19,8 +19,8 @@ def make_zero_mean(image):
 
 def normalize_image(image):
     # gray = convert_to_gray(image)
-    # resize = resize_image(image)
-    return make_zero_mean(image)
+    resize = resize_image(image, resize_shape=(200, 66))
+    return make_zero_mean(resize)
 
 # This function is to generate flipped images to simulate opposite side driving
 def flipimage(image):
@@ -36,9 +36,9 @@ def flipimage(image):
 # ax2 = f2.add_subplot(111)
 # ax2.plot(range(10,20))
 # plt.show()
-
+    
 # plt.subplot(2,1,1)
 # plt.imshow(img)
 # plt.subplot(2,1,2)
-# plt.imshow(flipimage(img))
+# plt.imshow(resize_image(img, (200, 66)))
 # plt.show()

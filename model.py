@@ -25,11 +25,11 @@ def main(_):
     train_images_size = 0.9 * len(drive_entries) * 4
     val_images_size = 0.1 * len(drive_entries) * 4
 
-    model = getCommaAiModel()
+    model = getNvidiaModel()
     model.compile(optimizer=Adam(lr=FLAGS.lrate), loss='mse')
     model.fit_generator(train_generator,
                         samples_per_epoch = train_images_size,
-                        nb_epoch=10,
+                        nb_epoch=FLAGS.num_epochs,
                         validation_data=val_generator,
                         nb_val_samples=val_images_size)
 
@@ -37,6 +37,24 @@ def main(_):
     model.save_weights(FLAGS.output_dir + '/model.h5')
     with open(FLAGS.output_dir + '/model.json', 'w') as f:
         f.write(json)
+
+def getNvidiaModel():
+    ch, row, col = 3, 66, 200  # camera format
+    model = Sequential([
+        Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='relu'),
+        Conv2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
+        Conv2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
+        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
+        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
+
+        Flatten(),
+        Dense(1164, activation='relu'),
+        Dense(100, activation='relu'),
+        Dense(50, activation='relu'),
+        Dense(10, activation='relu'),
+        Dense(1, name='output', activation='tanh'),
+    ])
+    return model
 
 def getCommaAiModel():
     ch, row, col = 3, 160, 320  # camera format
