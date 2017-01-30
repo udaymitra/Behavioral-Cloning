@@ -19,12 +19,26 @@ def make_zero_mean(image):
 
 def normalize_image(image):
     # gray = convert_to_gray(image)
-    resize = resize_image(image)
-    return make_zero_mean(resize)
+    # resize = resize_image(image)
+    return make_zero_mean(image)
 
-# sample_image_path = '/code/carnd/behavior cloning sims/IMG/center_2017_01_26_20_22_58_395.jpg'
-# img = read_image(sample_image_path)
-# plt.imshow(img)
+# This function is to generate flipped images to simulate opposite side driving
+def flipimage(image):
+    return cv2.flip(image, 1)
+
+sample_image_path = '/code/carnd/behavior cloning sims/data2/IMG/center_2017_01_27_15_26_38_557.jpg'
+img = read_image(sample_image_path)
+#
+# f1 = plt.figure()
+# f2 = plt.figure()
+# ax1 = f1.add_subplot(111)
+# ax1.plot(range(0,10))
+# ax2 = f2.add_subplot(111)
+# ax2.plot(range(10,20))
 # plt.show()
-# plt.imshow(resize_image(img))
+
+# plt.subplot(2,1,1)
+# plt.imshow(img)
+# plt.subplot(2,1,2)
+# plt.imshow(flipimage(img))
 # plt.show()

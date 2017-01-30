@@ -4,6 +4,8 @@ from os.path import join
 import image_util
 import numpy as np
 
+CAMERA_LEFT_RIGHTOFFSET = 0.2
+
 class DriveLogEntry:
     def __init__(self, csv_entry, base_dir):
         assert len(csv_entry) == 7
@@ -17,11 +19,15 @@ class DriveLogEntry:
 
         self.steering = float(csv_entry[3])
 
+    # return tuples of images and its steering
+    # center image, left image with camera offset, right image with camera offset
+    # and center image flipped right to left
+    # If normalize method is passed in, then applies normalization on all the images
     def get_training_data(self, normalize_method=None):
-        # return tuples of images and its steering
-        # currently returning just center image
-        # data = [(self.center_image, self.steering), (self.left_image, self.steering), (self.right_image, self.steering)]
-        data = [(self.center_image, self.steering)]
+        data = [(self.center_image, self.steering),
+                (self.left_image, self.steering - CAMERA_LEFT_RIGHTOFFSET),
+                (self.right_image, self.steering + CAMERA_LEFT_RIGHTOFFSET),
+                (image_util.flipimage(self.center_image), -1 * self.steering)]
         if (normalize_method):
             data = [(normalize_method(entry[0]), entry[1]) for entry in data]
         return data

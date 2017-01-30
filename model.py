@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import csv
 from keras.models import Sequential
-from keras.layers import Conv2D, ConvLSTM2D, Dense, MaxPooling2D, Dropout, Flatten
+from keras.layers import Conv2D, ConvLSTM2D, Dense, MaxPooling2D, Dropout, Flatten, ELU, Convolution2D
 from keras.optimizers import Adam
 
 import image_util
@@ -22,7 +22,7 @@ def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
     (X, y) = get_training_data(drive_entries, image_util.normalize_image)
 
-    model = getModel()
+    model = getCommaAiModel()
     model.compile(optimizer=Adam(lr=FLAGS.lrate), loss='mse')
     history = model.fit(X, y, batch_size=128, nb_epoch=10, validation_split=0.2)
 
@@ -31,6 +31,25 @@ def main(_):
     with open(FLAGS.output_dir + '/model.json', 'w') as f:
         f.write(json)
 
+def getCommaAiModel():
+    ch, row, col = 3, 160, 320  # camera format
+
+    model = Sequential()
+    model.add(Convolution2D(16, 8, 8, input_shape=(160, 320, 3), subsample=(4, 4), border_mode="same"))
+    model.add(ELU())
+    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(ELU())
+    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Flatten())
+    model.add(Dropout(.2))
+    model.add(ELU())
+    model.add(Dense(512))
+    model.add(Dropout(.5))
+    model.add(ELU())
+    model.add(Dense(1))
+
+    return model
+
 def getModel():
     # input image is of shape 80x160x3
     model = Sequential([
@@ -38,13 +57,13 @@ def getModel():
         MaxPooling2D(pool_size=(2, 2)),
         Conv2D(nb_filter=64, nb_row=6, nb_col=3, border_mode='valid', activation='relu'),
         MaxPooling2D(pool_size=(2, 2)),
-        # Dropout(0.5),
+        Dropout(0.5),
 
         Conv2D(128, 6, 3, border_mode='same', activation='relu'),
         MaxPooling2D(pool_size=(2, 2)),
         Conv2D(256, 6, 3, border_mode='same', activation='relu'),
         MaxPooling2D(pool_size=(2, 2)),
-        # Dropout(0.5),
+        Dropout(0.5),
 
         Flatten(),
         Dense(2048, activation='relu'),
