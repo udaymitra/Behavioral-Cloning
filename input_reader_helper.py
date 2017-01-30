@@ -52,5 +52,15 @@ def get_training_data(drive_entries, normalize_method=None):
         images_and_labels = [list(t) for t in zip(*data)]
         images.extend(images_and_labels[0])
         labels.extend(images_and_labels[1])
+    return (images, labels)
 
-    return (np.array(images), np.array(labels))
+def get_training_data_generator(images, labels, batch_size=128):
+    num_examples = len(images)
+    while True:
+        out_images = []
+        out_labels = []
+        for i in range(batch_size):
+            random = int(np.random.choice(num_examples, 1))
+            out_images.append(images[random])
+            out_labels.append(labels[random])
+        yield (np.array(out_images), np.array(out_labels))

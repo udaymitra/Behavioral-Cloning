@@ -26,8 +26,8 @@ def normalize_image(image):
 def flipimage(image):
     return cv2.flip(image, 1)
 
-sample_image_path = '/code/carnd/behavior cloning sims/data2/IMG/center_2017_01_27_15_26_38_557.jpg'
-img = read_image(sample_image_path)
+# sample_image_path = '/code/carnd/behavior cloning sims/data2/IMG/center_2017_01_27_15_26_38_557.jpg'
+# img = read_image(sample_image_path)
 #
 # f1 = plt.figure()
 # f2 = plt.figure()
