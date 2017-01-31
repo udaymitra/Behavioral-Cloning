@@ -24,8 +24,8 @@ flags.DEFINE_string('model', '', 'pre-trained model file path')
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
     (train_generator, val_generator) = get_training_and_valid_data_generators(drive_entries, FLAGS.batch_size, image_util.normalize_image)
-    train_images_size = 0.9 * len(drive_entries) * 4
-    val_images_size = 0.1 * len(drive_entries) * 4
+    train_images_size = 0.9 * len(drive_entries) * 8
+    val_images_size = 0.1 * len(drive_entries) * 8
 
     model = model_reader.read_model(FLAGS.model) if FLAGS.model else getNvidiaModel(FLAGS.lrate)
     model.fit_generator(train_generator,
@@ -44,13 +44,18 @@ def getNvidiaModel(learning_rate):
     model = Sequential([
         Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='relu'),
         Conv2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
+        Dropout(.2),
+
         Conv2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
         Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
         Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
+        Dropout(.4),
 
         Flatten(),
         Dense(1164, activation='relu'),
         Dense(100, activation='relu'),
+        Dropout(.5),
+
         Dense(50, activation='relu'),
         Dense(10, activation='relu'),
         Dense(1, name='output', activation='tanh'),
