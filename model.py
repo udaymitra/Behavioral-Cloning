@@ -46,23 +46,29 @@ def main(_):
 def getNvidiaModel(learning_rate):
     ch, row, col = 3, 66, 200  # camera format
     model = Sequential([
-        Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='relu'),
-        Conv2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
+        Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='elu'),
+        Dropout(.2),
+        Conv2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='elu'),
         Dropout(.2),
 
-        Conv2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'),
-        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
-        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'),
+        Conv2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='elu'),
+        Dropout(.2),
+        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='elu'),
+        Dropout(.2),
+        Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='elu'),
         Dropout(.4),
 
         Flatten(),
-        Dense(1164, activation='relu'),
-        Dense(100, activation='relu'),
+        Dense(1164, activation='elu'),
+        Dropout(.5),
+        Dense(100, activation='elu'),
         Dropout(.5),
 
-        Dense(50, activation='relu'),
-        Dense(10, activation='relu'),
-        Dense(1, name='output', activation='tanh'),
+        Dense(50, activation='elu'),
+        Dropout(.5),
+        Dense(10, activation='elu'),
+        Dropout(.5),
+        Dense(1, name='output'),
     ])
     model.compile(optimizer=Adam(lr=learning_rate), loss='mse')
     return model
