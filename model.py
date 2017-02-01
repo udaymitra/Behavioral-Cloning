@@ -23,9 +23,13 @@ flags.DEFINE_string('model', '', 'pre-trained model file path')
 
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
-    (train_generator, val_generator) = get_training_and_valid_data_generators(drive_entries, FLAGS.batch_size, image_util.normalize_image)
-    train_images_size = 0.9 * len(drive_entries) * 8
-    val_images_size = 0.1 * len(drive_entries) * 8
+    train_drive_entries, val_drive_entries = split_train_val(drive_entries)
+    train_generator = get_keras_generator(train_drive_entries, FLAGS.batch_size, image_util.normalize_image)
+    val_generator = get_keras_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
+    train_images_size = len(train_drive_entries) * CONFIG["num_training_entries_per_image"]
+    val_images_size = len(val_drive_entries) * CONFIG["num_training_entries_per_image"]
+    print("train_images_size: %d"%train_images_size)
+    print("val_images_size: %d"%val_images_size)
 
     model = model_reader.read_model(FLAGS.model) if FLAGS.model else getNvidiaModel(FLAGS.lrate)
     model.fit_generator(train_generator,

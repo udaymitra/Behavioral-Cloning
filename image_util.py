@@ -49,20 +49,3 @@ def add_random_shadow(image):
             image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
     image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2RGB)
     return image
-
-# sample_image_path = '/code/carnd/behavior cloning sims/data2/IMG/center_2017_01_27_15_26_38_557.jpg'
-# img = read_image(sample_image_path)
-#
-# f1 = plt.figure()
-# f2 = plt.figure()
-# ax1 = f1.add_subplot(111)
-# ax1.plot(range(0,10))
-# ax2 = f2.add_subplot(111)
-# ax2.plot(range(10,20))
-# plt.show()
-#
-# plt.subplot(2,1,1)
-# plt.imshow(img)
-# plt.subplot(2,1,2)
-# plt.imshow(add_random_shadow(img))
-# plt.show()

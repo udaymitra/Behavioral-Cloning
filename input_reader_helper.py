@@ -4,8 +4,8 @@ from os.path import join
 from image_util import *
 import numpy as np
 from sklearn.utils import shuffle
-
-CAMERA_LEFT_RIGHTOFFSET = 0.2
+import random
+from config import CONFIG
 
 class DriveLogEntry:
     def __init__(self, csv_entry, base_dir):
@@ -20,19 +20,36 @@ class DriveLogEntry:
 
         self.steering = float(csv_entry[3])
 
-    # return tuples of images and its steering
-    # center image, left image with camera offset, right image with camera offset
-    # and center image flipped right to left
-    # If normalize method is passed in, then applies normalization on all the images
-    def get_training_data(self, normalize_method=None):
-        data = [(self.center_image, self.steering),
-                (add_random_shadow(self.center_image), self.steering),
-                (self.left_image, self.steering - CAMERA_LEFT_RIGHTOFFSET),
-                (add_random_shadow(self.left_image), self.steering - CAMERA_LEFT_RIGHTOFFSET),
-                (self.right_image, self.steering + CAMERA_LEFT_RIGHTOFFSET),
-                (add_random_shadow(self.right_image), self.steering + CAMERA_LEFT_RIGHTOFFSET),
-                (flipimage(self.center_image), -1 * self.steering),
-                (add_random_shadow(flipimage(self.center_image)), -1 * self.steering)]
+    def get_training_data_with_augmentation(self, normalize_method=None):
+        data = []
+        for idx in range(CONFIG["num_training_entries_per_image"]):
+            img = self.center_image
+            steer = self.steering
+
+            # randomly choose which camera to use among (center, left, right)
+            # if we picked left/right camera, adjust steer accordingly
+            camera = random.choice(['center', 'left', 'right'])
+            if camera == 'left':
+                img = self.left_image
+                steer = self.steering - CONFIG["camera_correction"]
+            elif camera == 'right':
+                img = self.right_image
+                steer = self.steering + CONFIG["camera_correction"]
+
+            # mirror images with probability=0.5
+            if random.choice([True, False]):
+                img = flipimage(img)
+                steer *= -1
+
+            # add shadow to images with probability=0.5
+            if random.choice([True, False]):
+                img = add_random_shadow(img)
+
+            # slightly change steering direction
+            steer += np.random.normal(0, CONFIG['steering_augmentation_sigma'])
+
+            data.append((img, steer))
+
         if (normalize_method):
             data = [(normalize_method(entry[0]), entry[1]) for entry in data]
         return data
@@ -48,6 +65,11 @@ def read_drive_entries_from_csv(csv_path, dir_base_path):
     reader = csv.reader(file)
     drive_entries = [DriveLogEntry(row, dir_base_path) for row in reader]
     return drive_entries
+
+def split_train_val(drive_entries):
+    shuffle(drive_entries)
+    num_train = int(CONFIG["training_data_split"] * len(drive_entries))
+    return drive_entries[:num_train], drive_entries[num_train:]
 
 def get_training_data(drive_entries, normalize_method=None):
     images = []
@@ -70,30 +92,37 @@ def get_training_data_generator(images, labels, batch_size=128):
             out_labels.append(labels[random])
         yield np.array(out_images), np.array(out_labels)
 
-def get_generator(drive_entries, batch_size=128, normalize_method=None):
+def get_keras_generator(drive_entries, batch_size, normalize_method=None):
     num_examples = len(drive_entries)
     while True:
+        entry_idx = 0
+        while entry_idx < num_examples:
+            out_images = []
+            out_labels = []
+            num_batch_examples = 0
+            while num_batch_examples < batch_size and entry_idx < num_examples:
+                drive_entry = drive_entries[entry_idx]
+                data = drive_entry.get_training_data_with_augmentation(normalize_method)
+                num_batch_examples += len(data)
+                images_and_labels = [list(t) for t in zip(*data)]
+                out_images.extend(images_and_labels[0])
+                out_labels.extend(images_and_labels[1])
+                entry_idx += 1
+            yield (np.array(out_images), np.array(out_labels))
+
+def get_generator(drive_entries, batch_size, normalize_method=None):
+    num_examples = len(drive_entries)
+    entry_idx = 0
+    while entry_idx < num_examples:
         out_images = []
         out_labels = []
         num_batch_examples = 0
-        while num_batch_examples < batch_size:
-            random = int(np.random.choice(num_examples, 1))
-            drive_entry = drive_entries[random]
-            data = drive_entry.get_training_data(normalize_method)
+        while num_batch_examples < batch_size and entry_idx < num_examples:
+            drive_entry = drive_entries[entry_idx]
+            data = drive_entry.get_training_data_with_augmentation(normalize_method)
             num_batch_examples += len(data)
             images_and_labels = [list(t) for t in zip(*data)]
             out_images.extend(images_and_labels[0])
             out_labels.extend(images_and_labels[1])
+            entry_idx += 1
         yield (np.array(out_images), np.array(out_labels))
-
-def get_training_and_valid_data_generators(drive_entries, batch_size=128, normalize_method=None):
-    shuffle(drive_entries)
-    num_entries = len(drive_entries)
-    # split into train and val
-    num_train = int(0.9 * num_entries)
-    train_drive_entries = drive_entries[:num_train]
-    val_drive_entries = drive_entries[num_train:]
-    return (get_generator(train_drive_entries, batch_size, normalize_method),
-            get_generator(val_drive_entries, batch_size, normalize_method))
-
-
