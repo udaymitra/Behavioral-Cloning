@@ -82,3 +82,4 @@ def getNvidiaModel(learning_rate):
 
 if __name__ == '__main__':
     tf.app.run()
+    import gc; gc.collect()

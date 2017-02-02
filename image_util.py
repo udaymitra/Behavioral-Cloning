@@ -1,6 +1,5 @@
 import matplotlib.image as mpimg
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 def read_image(path):
@@ -18,8 +17,13 @@ def resize_image(image, resize_shape=(160, 80)):
 def make_zero_mean(image):
     return (image - 128.5) / 255.
 
+# crop out top (sky) and bottom part of the image
+def crop_image(image):
+    return image[40:140,:,:]
+
 def normalize_image(image):
-    resize = resize_image(image, resize_shape=(200, 66))
+    cropped_image = crop_image(image)
+    resize = resize_image(cropped_image, resize_shape=(200, 66))
     return make_zero_mean(resize)
 
 # This function is to generate flipped images to simulate opposite side driving
