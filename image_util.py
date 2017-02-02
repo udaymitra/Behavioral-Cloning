@@ -19,7 +19,6 @@ def make_zero_mean(image):
     return (image - 128.5) / 255.
 
 def normalize_image(image):
-    # gray = convert_to_gray(image)
     resize = resize_image(image, resize_shape=(200, 66))
     return make_zero_mean(resize)
 

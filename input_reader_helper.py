@@ -20,12 +20,12 @@ class DriveLogEntry:
 
         self.steering = float(csv_entry[3])
 
-    def get_training_data_with_augmentation(self, normalize_method=None, bias = CONFIG["bias"]):
+    def get_training_data_with_augmentation(self, normalize_method=None, augment_prob=1, bias = CONFIG["bias"]):
         data = []
-        for idx in range(CONFIG["num_training_entries_per_image"]):
-            img = self.center_image
-            steer = self.steering
+        img = self.center_image
+        steer = self.steering
 
+        if np.random.rand() < augment_prob:
             # randomly choose which camera to use among (center, left, right)
             # if we picked left/right camera, adjust steer accordingly
             camera = random.choice(['center', 'left', 'right'])
@@ -46,12 +46,15 @@ class DriveLogEntry:
                 img = add_random_shadow(img)
 
             # slightly change steering direction
-            steer += np.random.normal(0, CONFIG['steering_augmentation_sigma'])
+            # steer += np.random.normal(0, CONFIG['steering_augmentation_sigma'])
 
             # check that each element in the batch meet the condition
-            steer_magnitude_thresh = np.random.rand()
-            if (abs(steer) + bias) >= steer_magnitude_thresh:
-                data.append((img, steer))
+            # steer_magnitude_thresh = np.random.rand()
+            # if (abs(steer) + bias) >= steer_magnitude_thresh:
+            #     data.append((img, steer))
+
+            data.append((img, steer))
+        else:
             data.append((img, steer))
 
         if (normalize_method):
@@ -96,7 +99,7 @@ def get_training_data_generator(images, labels, batch_size=128):
             out_labels.append(labels[random])
         yield np.array(out_images), np.array(out_labels)
 
-def get_keras_generator(drive_entries, batch_size, bias = CONFIG["bias"], normalize_method=None):
+def get_keras_generator(drive_entries, batch_size, augment_prob=1, bias = CONFIG["bias"], normalize_method=None):
     num_examples = len(drive_entries)
     while True:
         entry_idx = 0
@@ -106,7 +109,8 @@ def get_keras_generator(drive_entries, batch_size, bias = CONFIG["bias"], normal
             num_batch_examples = 0
             while num_batch_examples < batch_size and entry_idx < num_examples:
                 drive_entry = drive_entries[entry_idx]
-                data = drive_entry.get_training_data_with_augmentation(normalize_method, bias)
+                data = drive_entry.get_training_data_with_augmentation(normalize_method,
+                                                                       augment_prob=augment_prob, bias=bias)
                 num_batch_examples += len(data)
                 if data:
                     images_and_labels = [list(t) for t in zip(*data)]

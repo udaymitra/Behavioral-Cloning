@@ -58,27 +58,27 @@ def show_sample_images_after_augmentation():
 
     show_images(sample_images, titles, 3)
 
-def visualize_steering_distribution_after_augmentation():
+def visualize_steering_distribution(title, augmentation_prob=1):
     drive_entries = input_reader_helper.read_drive_entries_from_csv("./data/driving_log.csv", "data/IMG")
-    data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, bias = 0.8)
+    data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, augment_prob=augmentation_prob)
     steering_list = []
     num_entries = 0
-    while num_entries < 2 * len(drive_entries):
+    while num_entries < len(drive_entries):
         imgs, steerings =  next(data_generator)
         steering_list += list(steerings)
         num_entries += steerings.shape[0]
 
     print("num training data: %d" % len(steering_list) )
-    visualize_steering(steering_list, 'Steering angle distribution after augmentation')
+    visualize_steering(steering_list, title)
 
 def visualize_bias_parameter_effect():
     drive_entries = input_reader_helper.read_drive_entries_from_csv("./data/driving_log.csv", "data/IMG")
-    biases = np.linspace(start=0., stop=1., num=5)
+    biases = [0, 0.2, 0.4, 0.6, 0.8, 1]
     fig, axarray = plt.subplots(len(biases))
     plt.suptitle('Effect of bias parameter on steering angle distribution', fontsize=14, fontweight='bold')
     for i, ax in enumerate(axarray.ravel()):
         b = biases[i]
-        data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, bias=b)
+        data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, augment_prob=1, bias=b)
         steering_list = []
         num_entries = 0
         while num_entries < 2 * len(drive_entries):
@@ -92,4 +92,6 @@ def visualize_bias_parameter_effect():
     plt.tight_layout(pad=2, w_pad=0.5, h_pad=1.0)
     plt.show()
 
-show_sample_images()
+plt.close("all")
+# visualize_steering_distribution('Steering angle distribution after augmentation', augmentation_prob=1)
+visualize_bias_parameter_effect()
