@@ -24,8 +24,10 @@ flags.DEFINE_string('model', '', 'pre-trained model file path')
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
     train_drive_entries, val_drive_entries = split_train_val(drive_entries)
-    train_generator = get_keras_generator(train_drive_entries, FLAGS.batch_size, image_util.normalize_image)
-    val_generator = get_keras_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
+    train_generator = get_keras_generator(train_drive_entries, FLAGS.batch_size,
+                                          bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
+    val_generator = get_keras_generator(val_drive_entries, FLAGS.batch_size,
+                                        bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
     train_images_size = len(train_drive_entries) * CONFIG["num_training_entries_per_image"]
     val_images_size = len(val_drive_entries) * CONFIG["num_training_entries_per_image"]
     print("train_images_size: %d"%train_images_size)
