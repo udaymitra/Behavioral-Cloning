@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import input_reader_helper
 import math
+import numpy as np
 from sklearn.utils import shuffle
 
 def visualize_steering_distribution():
@@ -40,9 +41,9 @@ def show_sample_images():
         sample_images.append(entry.center_image)
         titles.append("center image. steering: %f"%entry.steering)
         sample_images.append(entry.left_image)
-        titles.append("left image. corrected steering: %f" % (entry.steering - 0.2))
+        titles.append("left image. corrected steering: %f" % (entry.steering + 0.2))
         sample_images.append(entry.right_image)
-        titles.append("right image. corrected steering: %f" % (entry.steering + 0.2))
+        titles.append("right image. corrected steering: %f" % (entry.steering - 0.2))
     show_images(sample_images, titles, 3)
 
 def show_sample_images_after_augmentation():
@@ -59,11 +60,36 @@ def show_sample_images_after_augmentation():
 
 def visualize_steering_distribution_after_augmentation():
     drive_entries = input_reader_helper.read_drive_entries_from_csv("./data/driving_log.csv", "data/IMG")
-    data_generator = input_reader_helper.get_generator(drive_entries, 512)
+    data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, bias = 0.8)
     steering_list = []
-    for d in data_generator:
-        steering_list += list(d[1])
+    num_entries = 0
+    while num_entries < 2 * len(drive_entries):
+        imgs, steerings =  next(data_generator)
+        steering_list += list(steerings)
+        num_entries += steerings.shape[0]
+
     print("num training data: %d" % len(steering_list) )
     visualize_steering(steering_list, 'Steering angle distribution after augmentation')
 
-show_sample_images_after_augmentation()
+def visualize_bias_parameter_effect():
+    drive_entries = input_reader_helper.read_drive_entries_from_csv("./data/driving_log.csv", "data/IMG")
+    biases = np.linspace(start=0., stop=1., num=5)
+    fig, axarray = plt.subplots(len(biases))
+    plt.suptitle('Effect of bias parameter on steering angle distribution', fontsize=14, fontweight='bold')
+    for i, ax in enumerate(axarray.ravel()):
+        b = biases[i]
+        data_generator = input_reader_helper.get_keras_generator(drive_entries, 512, bias=b)
+        steering_list = []
+        num_entries = 0
+        while num_entries < 2 * len(drive_entries):
+            imgs, steerings = next(data_generator)
+            steering_list += list(steerings)
+            num_entries += steerings.shape[0]
+
+        ax.hist(steering_list, 50, normed=1, facecolor='green', alpha=0.75)
+        ax.set_title('Bias: {:02f}'.format(b))
+        ax.axis([-1., 1., 0., 2.])
+    plt.tight_layout(pad=2, w_pad=0.5, h_pad=1.0)
+    plt.show()
+
+show_sample_images()
