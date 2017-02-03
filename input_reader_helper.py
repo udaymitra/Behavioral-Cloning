@@ -53,6 +53,13 @@ class DriveLogEntry:
             # if (abs(steer) + bias) >= steer_magnitude_thresh:
             #     data.append((img, steer))
 
+            # shooting for equal distribution of steering angles
+            # steering_bin_size = 0.05
+            # rounded_steering_val_min = int(steer / steering_bin_size) * steering_bin_size
+            # rounded_steering_val_max = rounded_steering_val_min + steering_bin_size
+            # random_value = np.random.rand()
+            # random_value = random_value * 2 - 1
+            # if (random_value >= rounded_steering_val_min and random_value < rounded_steering_val_max):
             data.append((img, steer))
         else:
             data.append((img, steer))
