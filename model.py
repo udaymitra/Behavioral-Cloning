@@ -35,11 +35,10 @@ def main(_):
         f.write(json)
 
 def train_model(model, train_drive_entries, val_drive_entries, augment_prob):
-    train_generator = get_keras_generator(train_drive_entries, FLAGS.batch_size, augment_prob=augment_prob,
-                                          bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
-    # Use center image w/o any augmentation for validation
-    val_generator = get_keras_generator(val_drive_entries, FLAGS.batch_size, augment_prob=0,
-                                        bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
+    train_generator = get_training_data_generator_equal_steering_distribution(train_drive_entries,
+                                                FLAGS.batch_size, augment_prob=augment_prob,
+                                                bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
+    val_generator = get_validation_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
     train_images_size = len(train_drive_entries) * CONFIG["num_training_entries_per_image"]
     val_images_size = len(val_drive_entries) * CONFIG["num_training_entries_per_image"]
     print("train_images_size: %d" % train_images_size)
