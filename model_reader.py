@@ -9,7 +9,6 @@ def read_model(file_path):
         #
         # instead.
         model = model_from_json(jfile.read())
-    model.compile("adam", "mse")
     weights_file = file_path.replace('json', 'h5')
     model.load_weights(weights_file)
     print("Read existing model from disk")

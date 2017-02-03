@@ -23,11 +23,15 @@ flags.DEFINE_string('model', '', 'pre-trained model file path')
 
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
-    train_drive_entries, val_drive_entries = split_train_val(drive_entries)
-
     model = model_reader.read_model(FLAGS.model) if FLAGS.model else getNvidiaModel(FLAGS.lrate)
 
-    train_model(model, train_drive_entries, val_drive_entries, augment_prob=1)
+    for (lrate, aug_prob) in [(FLAGS.lrate, 0),
+                              (0.8 * FLAGS.lrate, 0.5),
+                              (0.5 * FLAGS.lrate, 0.8),
+                              (0.3 * FLAGS.lrate, 1)]:
+        train_drive_entries, val_drive_entries = split_train_val(drive_entries)
+        model.compile(optimizer=Adam(lr=lrate), loss='mse')
+        train_model(model, train_drive_entries, val_drive_entries, augment_prob=aug_prob)
 
     json = model.to_json()
     model.save_weights(FLAGS.output_dir + '/model.h5')
@@ -40,7 +44,7 @@ def train_model(model, train_drive_entries, val_drive_entries, augment_prob):
                                                 bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
     val_generator = get_validation_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
     train_images_size = len(train_drive_entries) * CONFIG["num_training_entries_per_image"]
-    val_images_size = len(val_drive_entries) * CONFIG["num_training_entries_per_image"]
+    val_images_size = len(val_drive_entries)
     print("train_images_size: %d" % train_images_size)
     print("val_images_size: %d" % val_images_size)
     model.fit_generator(train_generator,
@@ -76,7 +80,6 @@ def getNvidiaModel(learning_rate):
         # Dropout(.5),
         Dense(1, name='output'),
     ])
-    model.compile(optimizer=Adam(lr=learning_rate), loss='mse')
     return model
 
 if __name__ == '__main__':
