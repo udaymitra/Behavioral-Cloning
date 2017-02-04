@@ -1,6 +1,7 @@
 import matplotlib.image as mpimg
 import cv2
 import numpy as np
+from config import CONFIG
 
 def read_image(path):
     image = mpimg.imread(path)
@@ -52,3 +53,11 @@ def add_random_shadow(image):
             image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
     image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2RGB)
     return image
+
+def set_random_brightness(image):
+    image = cv2.cvtColor(image, code=cv2.COLOR_BGR2HSV)
+    image = image.astype(np.float64)
+    image[:, :, 2] *= np.random.uniform(CONFIG['augmentation_value_min'], CONFIG['augmentation_value_max'])
+    image = image.astype(np.uint8)
+    image[:, :, 2] = np.clip(image[:, :, 2], a_min=0, a_max=255)
+    return cv2.cvtColor(image, code=cv2.COLOR_HSV2BGR)
