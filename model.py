@@ -57,7 +57,9 @@ def train_model(model, train_drive_entries, val_drive_entries, augment_prob,
                                                 keep_pr_threshold = keep_pr_threshold)
     val_generator = get_validation_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
     train_images_size = len(train_drive_entries) * num_training_entries_per_image
+    train_images_size = (int(train_images_size / FLAGS.batch_size) + 1) * FLAGS.batch_size
     val_images_size = len(val_drive_entries)
+    val_images_size = ((int(val_images_size) / FLAGS.batch_size) +1) * FLAGS.batch_size
     print("train_images_size: %d" % train_images_size)
     print("val_images_size: %d" % val_images_size)
     model.fit_generator(train_generator,
