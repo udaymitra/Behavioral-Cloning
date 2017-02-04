@@ -14,20 +14,25 @@ class DriveLogEntry:
         self.left_file_path = join(base_dir, csv_entry[1].split('/')[-1])
         self.right_file_path = join(base_dir, csv_entry[2].split('/')[-1])
 
-        self.center_image = read_image(self.center_file_path)
-        self.left_image = read_image(self.left_file_path)
-        self.right_image = read_image(self.right_file_path)
-
         self.steering = float(csv_entry[3])
 
+    def get_center_image(self):
+        return read_image(self.center_file_path)
+
+    def get_left_image(self):
+        return read_image(self.left_file_path)
+
+    def get_right_image(self):
+        return read_image(self.right_file_path)
+
     def get_validation_data(self, normalize_method=None):
-        img = self.center_image
+        img = self.get_center_image()
         steer = self.steering
         return (normalize_method(img), steer)
 
     def get_training_data_with_augmentation(self, normalize_method=None, augment_prob=1, keep_pr_threshold=0.5):
         data = []
-        img = self.center_image
+        img = self.get_center_image()
         steer = self.steering
 
         if np.random.rand() < augment_prob:
@@ -35,10 +40,10 @@ class DriveLogEntry:
             # if we picked left/right camera, adjust steer accordingly
             camera = random.choice(['center', 'left', 'right'])
             if camera == 'left':
-                img = self.left_image
+                img = self.get_left_image()
                 steer = self.steering + CONFIG["camera_correction"]
             elif camera == 'right':
-                img = self.right_image
+                img = self.get_right_image()
                 steer = self.steering - CONFIG["camera_correction"]
 
             # mirror images with probability=0.5
