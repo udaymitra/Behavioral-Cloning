@@ -25,7 +25,7 @@ class DriveLogEntry:
         steer = self.steering
         return (normalize_method(img), steer)
 
-    def get_training_data_with_augmentation(self, normalize_method=None, augment_prob=1, bias = CONFIG["bias"]):
+    def get_training_data_with_augmentation(self, normalize_method=None, augment_prob=1, keep_pr_threshold=0.5):
         data = []
         img = self.center_image
         steer = self.steering
@@ -51,23 +51,17 @@ class DriveLogEntry:
                 img = add_random_shadow(img)
 
             # slightly change steering direction
-            # steer += np.random.normal(0, CONFIG['steering_augmentation_sigma'])
+            # if random.choice([True, False]):
+            #     steer += np.random.normal(0, CONFIG['steering_augmentation_sigma'])
+            if (abs(steer) <= 0.1):
+                if (np.random.rand() > keep_pr_threshold):
+                    keep = True
+                else:
+                    keep = False
+            else:
+                keep = True
 
-            # check that each element in the batch meet the condition
-            # steer_magnitude_thresh = np.random.rand()
-            # if (abs(steer) + bias) >= steer_magnitude_thresh:
-            #     data.append((img, steer))
-
-            # shooting for equal distribution of steering angles
-            # steering_bin_size = 0.05
-            # rounded_steering_val_min = int(steer / steering_bin_size) * steering_bin_size
-            # rounded_steering_val_max = rounded_steering_val_min + steering_bin_size
-            # random_value = np.random.rand()
-            # random_value = random_value * 2 - 1
-            # if (random_value >= rounded_steering_val_min and random_value < rounded_steering_val_max):
-
-            # only valid steering angles
-            if (steer <= 1.0 and steer >= -1.0):
+            if keep:
                 data.append((img, steer))
         else:
             data.append((img, steer))
@@ -123,8 +117,10 @@ def get_validation_generator(drive_entries, batch_size, normalize_method=None):
                 out_labels.append(data[1])
             yield (np.array(out_images), np.array(out_labels))
 
-def get_training_data_generator_equal_steering_distribution(drive_entries, batch_size, augment_prob=1,
-                                                            bias=CONFIG["bias"], normalize_method=None):
+def get_training_data_generator_equal_steering_distribution(drive_entries, batch_size,
+                                                            augment_prob=1,
+                                                            keep_pr_threshold=0.5,
+                                                            normalize_method=None):
     # split entries into bins
     steering_bin_entry_dict = {}
     for entry in drive_entries:
@@ -141,7 +137,8 @@ def get_training_data_generator_equal_steering_distribution(drive_entries, batch
         for bin_number, bin_entries in steering_bin_entry_dict.items():
             entry_index = random.randint(0, len(bin_entries) - 1)
             entry = bin_entries[entry_index]
-            data = entry.get_training_data_with_augmentation(normalize_method, augment_prob=augment_prob, bias=bias)
+            data = entry.get_training_data_with_augmentation(normalize_method, augment_prob=augment_prob,
+                                                             keep_pr_threshold=keep_pr_threshold)
             num_batch_examples += len(data)
             if data:
                 images_and_labels = [list(t) for t in zip(*data)]
@@ -154,25 +151,29 @@ def get_training_data_generator_equal_steering_distribution(drive_entries, batch
                 out_images = []
                 out_labels = []
 
-def get_training_data_generator(drive_entries, batch_size, augment_prob=1, bias = CONFIG["bias"], normalize_method=None):
+def get_training_data_generator(drive_entries, batch_size, augment_prob=1,
+                                keep_pr_threshold=0.5,
+                                normalize_method=None):
     num_examples = len(drive_entries)
+    out_images = []
+    out_labels = []
+    num_batch_examples = 0
     while True:
-        entry_idx = 0
-        while entry_idx < num_examples:
+        entry_idx = np.random.randint(0, num_examples - 1)
+        drive_entry = drive_entries[entry_idx]
+        data = drive_entry.get_training_data_with_augmentation(normalize_method, augment_prob=augment_prob,
+                                                               keep_pr_threshold=keep_pr_threshold)
+        num_batch_examples += len(data)
+        if data:
+            images_and_labels = [list(t) for t in zip(*data)]
+            out_images.extend(images_and_labels[0])
+            out_labels.extend(images_and_labels[1])
+
+        if num_batch_examples >= batch_size:
+            yield (np.array(out_images), np.array(out_labels))
             out_images = []
             out_labels = []
             num_batch_examples = 0
-            while num_batch_examples < batch_size and entry_idx < num_examples:
-                drive_entry = drive_entries[entry_idx]
-                data = drive_entry.get_training_data_with_augmentation(normalize_method,
-                                                                       augment_prob=augment_prob, bias=bias)
-                num_batch_examples += len(data)
-                if data:
-                    images_and_labels = [list(t) for t in zip(*data)]
-                    out_images.extend(images_and_labels[0])
-                    out_labels.extend(images_and_labels[1])
-                entry_idx += 1
-            yield (np.array(out_images), np.array(out_labels))
 
 # get rid of this generator below. only used for visualization purposes
 def get_generator(drive_entries, batch_size, normalize_method=None):

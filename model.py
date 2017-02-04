@@ -24,26 +24,39 @@ flags.DEFINE_string('model', '', 'pre-trained model file path')
 def main(_):
     drive_entries = read_drive_entries_from_csv(FLAGS.csv_path, FLAGS.imgs_dir)
     model = model_reader.read_model(FLAGS.model) if FLAGS.model else getNvidiaModel(FLAGS.lrate)
+    model.compile(optimizer=Adam(), loss='mse')
 
-    for (lrate, aug_prob) in [(FLAGS.lrate, 0),
-                              (0.8 * FLAGS.lrate, 0.5),
-                              (0.5 * FLAGS.lrate, 0.8),
-                              (0.3 * FLAGS.lrate, 1)]:
-        train_drive_entries, val_drive_entries = split_train_val(drive_entries)
-        model.compile(optimizer=Adam(lr=lrate), loss='mse')
-        train_model(model, train_drive_entries, val_drive_entries, augment_prob=aug_prob)
+    # for (lrate, aug_prob) in [(FLAGS.lrate, 0),
+    #                           (0.8 * FLAGS.lrate, 0.5),
+    #                           (0.5 * FLAGS.lrate, 0.8),
+    #                           (0.3 * FLAGS.lrate, 1)]:
+    #     train_drive_entries, val_drive_entries = split_train_val(drive_entries)
+    #     train_model(model, train_drive_entries, val_drive_entries, augment_prob=aug_prob,
+    #                 num_training_entries_per_image = CONFIG["num_training_entries_per_image"])
+
+    num_training_entries_per_image = CONFIG["num_training_entries_per_image"]
+    train_model(model, drive_entries, drive_entries, augment_prob=1,
+                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.5)
+    train_model(model, drive_entries, drive_entries, augment_prob=1,
+                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.9)
+    train_model(model, drive_entries, drive_entries, augment_prob=1,
+                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0)
+
 
     json = model.to_json()
     model.save_weights(FLAGS.output_dir + '/model.h5')
     with open(FLAGS.output_dir + '/model.json', 'w') as f:
         f.write(json)
 
-def train_model(model, train_drive_entries, val_drive_entries, augment_prob):
-    train_generator = get_training_data_generator_equal_steering_distribution(train_drive_entries,
-                                                FLAGS.batch_size, augment_prob=augment_prob,
-                                                bias=CONFIG["bias"], normalize_method=image_util.normalize_image)
+def train_model(model, train_drive_entries, val_drive_entries, augment_prob,
+                num_training_entries_per_image = CONFIG["num_training_entries_per_image"], keep_pr_threshold = 0.5):
+    train_generator = get_training_data_generator(train_drive_entries,
+                                                FLAGS.batch_size,
+                                                augment_prob=augment_prob,
+                                                normalize_method=image_util.normalize_image,
+                                                keep_pr_threshold = keep_pr_threshold)
     val_generator = get_validation_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
-    train_images_size = len(train_drive_entries) * CONFIG["num_training_entries_per_image"]
+    train_images_size = len(train_drive_entries) * num_training_entries_per_image
     val_images_size = len(val_drive_entries)
     print("train_images_size: %d" % train_images_size)
     print("val_images_size: %d" % val_images_size)

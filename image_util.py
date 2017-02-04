@@ -19,7 +19,7 @@ def make_zero_mean(image):
 
 # crop out top (sky) and bottom part of the image
 def crop_image(image):
-    return image[40:140,:,:]
+    return image[60:140,:,:]
 
 def normalize_image(image):
     cropped_image = crop_image(image)
