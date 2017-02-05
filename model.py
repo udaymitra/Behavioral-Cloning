@@ -85,12 +85,12 @@ def getNvidiaModel(learning_rate):
 
         Flatten(),
         Dense(1164, activation='elu'),
-        Dropout(.2),
+        # Dropout(.2),
         Dense(100, activation='elu'),
-        Dropout(.2),
+        # Dropout(.2),
 
         Dense(50, activation='elu'),
-        Dropout(.2),
+        # Dropout(.2),
         Dense(10, activation='elu'),
         Dense(1, name='output'),
     ])
