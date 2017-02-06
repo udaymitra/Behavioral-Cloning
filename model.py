@@ -35,13 +35,10 @@ def main(_):
     #                 num_training_entries_per_image = CONFIG["num_training_entries_per_image"])
 
     num_training_entries_per_image = CONFIG["num_training_entries_per_image"]
-    # train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
-    #                             num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.5)
-    # train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
-    #                             num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.9)
-    # train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
-    #                             num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0)
-
+    train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
+                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.5)
+    train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
+                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.9)
     train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
                                 num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0)
 
@@ -53,18 +50,11 @@ def main(_):
 
 def train_model(model, train_drive_entries, val_drive_entries, augment_prob_threshold=0,
                 num_training_entries_per_image = CONFIG["num_training_entries_per_image"], keep_pr_threshold = 0.5):
-    # train_generator = get_training_data_generator(train_drive_entries,
-    #                                             FLAGS.batch_size,
-    #                                             augment_prob_threshold=augment_prob_threshold,
-    #                                             normalize_method=image_util.normalize_image,
-    #                                             keep_pr_threshold = keep_pr_threshold)
-
-    train_generator = get_training_data_generator_equal_steering_distribution(train_drive_entries,
-                                                  FLAGS.batch_size,
-                                                  augment_prob_threshold=augment_prob_threshold,
-                                                  normalize_method=image_util.normalize_image,
-                                                  keep_pr_threshold=keep_pr_threshold)
-
+    train_generator = get_training_data_generator(train_drive_entries,
+                                                FLAGS.batch_size,
+                                                augment_prob_threshold=augment_prob_threshold,
+                                                normalize_method=image_util.normalize_image,
+                                                keep_pr_threshold = keep_pr_threshold)
     val_generator = get_validation_generator(val_drive_entries, FLAGS.batch_size, image_util.normalize_image)
     train_images_size = len(train_drive_entries) * num_training_entries_per_image
     train_images_size = (int(train_images_size / FLAGS.batch_size) + 1) * FLAGS.batch_size
