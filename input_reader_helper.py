@@ -66,15 +66,10 @@ class DriveLogEntry:
         # This is limited by the value set for keep_pr_threshold
         if abs(steer) > 0.1 or (abs(steer) <= 0.1 and np.random.rand() > keep_pr_threshold):
             return (img, steer)
-        else:
-            return ()
 
     def get_training_data_with_augmentation(self, normalize_method=None, augment_prob_threshold=0, keep_pr_threshold=0.5):
         data = self.get_training_data_with_augmentation_no_normalization(augment_prob_threshold, keep_pr_threshold)
-        if data:
-            return (normalize_method(data[0]), data[1]) if normalize_method else data
-        else:
-            return ()
+        return (normalize_method(data[0]), data[1]) if normalize_method else data
 
     def print(self):
         print(self.center_file_path)

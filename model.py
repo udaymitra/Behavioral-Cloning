@@ -35,15 +35,15 @@ def main(_):
     #                 num_training_entries_per_image = CONFIG["num_training_entries_per_image"])
 
     num_training_entries_per_image = CONFIG["num_training_entries_per_image"]
-    train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
-                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.5)
-    train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
-                                num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.9)
+    # train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
+    #                             num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.5)
+    # train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
+    #                             num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0.9)
     train_model(model, drive_entries, drive_entries, augment_prob_threshold=0,
                                 num_training_entries_per_image=num_training_entries_per_image, keep_pr_threshold=0)
 
+
     json = model.to_json()
-    print("saving model to file")
     model.save_weights(FLAGS.output_dir + '/model.h5')
     with open(FLAGS.output_dir + '/model.json', 'w') as f:
         f.write(json)
@@ -85,13 +85,14 @@ def getNvidiaModel(learning_rate):
 
         Flatten(),
         Dense(1164, activation='elu'),
-        Dropout(.2),
+        # Dropout(.5),
         Dense(100, activation='elu'),
-        Dropout(.2),
+        # Dropout(.5),
 
         Dense(50, activation='elu'),
-        Dropout(.2),
+        # Dropout(.5),
         Dense(10, activation='elu'),
+        # Dropout(.5),
         Dense(1, name='output'),
     ])
     return model
