@@ -21,7 +21,6 @@ from image_util import normalize_image
 import tensorflow as tf
 tf.python.control_flow_ops = tf
 
-
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
@@ -47,10 +46,16 @@ def telemetry(sid, data):
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(transformed_image_array, batch_size=1))
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = 0.2
+
+    # Limit car speed to 15 MPH
+    target_speed = 15
+    if float(speed) < target_speed:
+        throttle = 0.7
+    else:
+        throttle = 0
+
     print(steering_angle, throttle)
     send_control(steering_angle, throttle)
-
 
 @sio.on('connect')
 def connect(sid, environ):

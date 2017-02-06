@@ -64,7 +64,7 @@ def visualize_steering_distribution(title, augment_prob_threshold=0):
     steering_list = []
     num_entries = 0
     while num_entries < len(drive_entries):
-        imgs, steerings =  next(data_generator)
+        imgs, steerings = next(data_generator)
         steering_list += list(steerings)
         num_entries += steerings.shape[0]
 
