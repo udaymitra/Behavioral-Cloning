@@ -35,12 +35,14 @@ def show_sample_images():
     sample_images = []
     titles = []
     for entry in drive_entries:
-        sample_images.append(entry.center_image)
-        titles.append("center image. steering: %f"%entry.steering)
-        sample_images.append(entry.left_image)
-        titles.append("left image. corrected steering: %f" % (entry.steering + 0.2))
-        sample_images.append(entry.right_image)
-        titles.append("right image. corrected steering: %f" % (entry.steering - 0.2))
+        sample_images.append(entry.get_center_image())
+        titles.append("center image. steering: %.3f"%entry.steering)
+
+        sample_images.append(entry.get_left_image())
+        titles.append("left image. corrected steering: %.3f" % (entry.steering + 0.2))
+
+        sample_images.append(entry.get_right_image())
+        titles.append("right image. corrected steering: %.3f" % (entry.steering - 0.2))
 
     sample_images = [image_util.crop_image(im) for im in sample_images]
     show_images(sample_images, titles, 3)
@@ -53,14 +55,15 @@ def show_sample_images_after_augmentation():
     sample_images, steer = next(data_generator)
 
     sample_images = list(sample_images)
+    sample_images = [image_util.crop_image(im) for im in sample_images]
     steer = list(steer)
 
     titles += [("steering: %f" % st) for st in steer]
     show_images(sample_images, titles, 3)
 
-def visualize_steering_distribution(title, augment_prob_threshold=0):
+def visualize_steering_distribution(title, augment_prob_threshold=0, keep_pr_threshold=0.8):
     drive_entries = input_reader_helper.read_drive_entries_from_csv("./data/driving_log.csv", "data/IMG")
-    data_generator = input_reader_helper.get_training_data_generator(drive_entries, 512, augment_prob_threshold=augment_prob_threshold, keep_pr_threshold=0.8)
+    data_generator = input_reader_helper.get_training_data_generator(drive_entries, 512, augment_prob_threshold=augment_prob_threshold, keep_pr_threshold=keep_pr_threshold)
     steering_list = []
     num_entries = 0
     while num_entries < len(drive_entries):
@@ -71,7 +74,7 @@ def visualize_steering_distribution(title, augment_prob_threshold=0):
     print("num training data: %d" % len(steering_list) )
     visualize_steering(steering_list, title)
 
-# visualize_steering_distribution('Steering angle distribution after augmentation', augment_prob_threshold=0)
+visualize_steering_distribution('Steering angle distribution (keep_pr_threshold=0)', augment_prob_threshold=0, keep_pr_threshold=0)
 # show_sample_images()
-show_sample_images_after_augmentation()
+# show_sample_images_after_augmentation()
 

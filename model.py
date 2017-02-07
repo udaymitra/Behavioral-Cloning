@@ -64,8 +64,8 @@ def getNvidiaModel():
     model = Sequential([
         Conv2D(24, 5, 5, input_shape=(row, col, ch), subsample=(2, 2), border_mode='valid', activation='elu'),
         Conv2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='elu'),
-
         Conv2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='elu'),
+
         Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='elu'),
         Conv2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='elu'),
 
