@@ -70,6 +70,19 @@ Demo video (https://youtu.be/Qnh9jU6xec0)
 * Although I didn't use any training data from the challenge track, the model seems to perform very well on this track. This is because of the noise I added by introducing shadows and random brightness to training data.
 
 ## References
-[1]https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
-[2]Link to Udacity data
-[3]Link to comma.ai model
+
+[1] NVIDIA paper -  https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
+
+[2] Training data - https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip
+
+[3] Comma.ai steering model - https://github.com/commaai/research/blob/master/train_steering_model.py
+
+[4] https://carnd-forums.udacity.com/questions/26214464/behavioral-cloning-cheatsheet
+
+[5] https://medium.com/@kikiorgg/sdc-proj3-for-impatient-people-aad78bb0dc99#.7mhi68wme
+
+[6] https://github.com/rush00121/behavioral_cloning
+
+[7] https://github.com/dolaameng/Udacity-SDC_Behavior-Cloning
+
+[8] https://github.com/diyjac/AgileTrainer
