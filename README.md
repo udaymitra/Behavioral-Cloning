@@ -62,7 +62,8 @@ I modified the drive.py to limit the car speed to 15MPH. Also, I normalize the i
 
 ## Results:
 Here's a video of how my model performs on track 1 (for which we have training data) and track 2 (challenge track).
-https://youtu.be/Qnh9jU6xec0
+
+Demo video (https://youtu.be/Qnh9jU6xec0)
 
 * The model works well at the turns.
 * However when road is straight, the model constantly keeps correcting by weaving left and right
