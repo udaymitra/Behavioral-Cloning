@@ -19,17 +19,18 @@ Here are the same sample images after applying the crop and camera angle correct
 ![alt tag](report_resources/sample_images_cropped_corrected_angle.png)
 
 ## Model Architecture
-I implemented both NVIDIA model and comma.ai model. After data augmentation, NVIDIA model performed better. NVIDIA model was able to a real world self driving car without human intervention.
+I implemented both NVIDIA model and comma.ai model. After data augmentation, NVIDIA model performed better. NVIDIA model was able to drive a real world self driving car without human intervention.
 
 The model consists of an input in the form of a 66x200 sized image which is fed into a CNN of 24 filters followed by a CNN of 36 filters followed by a CNN of 48 filters followed by 2 CNNs of 64 filters. I use strided convolutions in the first three convolutional layers with a 2×2 stride and a 5×5 kernel and a non-strided convolution with a 3×3 kernel size in the last two convolutional layers. I used ELU for activation functions, because ELUs have smoother derivatives at zero, and hence are expected to be slightly better and converge faster for predicted continuous values. I am using 'valid' padding to prevent introduction of unwanted edges in our resized data.
 
 After flattening the output of last convolution layer, there are 4 fully connected layers. The output of the last layer doesnt have any activation function, and is the steering angle prediction.
 
-NVIDIA frame work doesnt use dropouts, and so I am not using dropout layers in my model too. I noticed that adding dropouts severely degrades performance on both the tracks. To avoid overfitting, I am augmenting data with noise heavily. This is described in detail in below.
+NVIDIA frame work doesn't use dropouts, and so I am not using dropout layers in my model too. I noticed that adding dropouts severely degrades performance on both the tracks. This is because of the low volume of training data available. To avoid overfitting, I am augmenting data with noise heavily. This is described in detail in below.
 
 I am using Adam optimizer, so that we don't have to specify learning rate. Adam optimizer served me well in my previous projects.
 
 Here is the architecture diagram:
+
 ![alt tag](report_resources/nvidia_arch_diagram.png)
 
 ## Data Augmentation
@@ -37,7 +38,7 @@ Here is the architecture diagram:
 
 I followed some techniques mentioned in NVIDIA paper and some from CarND forum, which was very helpful.
 
-* I have used left, right and center images captured in the training data. However in the test run, I only use the center images. This increases the training data available by 3x.
+* I am using left, right and center images captured in the training data. However in the test run, I only use the center images. This increases the training data available by 3x.
 * I randomly select between left, right and center image
 * When left/right images are picked, I apply steering angle correction of 0.2
 * I randomly add shadows to image, and also change brigtness of the entire image. This deliberate introduction of noise is to avoid overfitting the original data.
@@ -47,28 +48,27 @@ I followed some techniques mentioned in NVIDIA paper and some from CarND forum, 
 * I am using a generator to feed training data into keras optimizer. Since there are a lot more frames with steering angle of 0, add a pr_threshold in the generator to generate samples that have a steering_angles greater than 0.1 using probablity threshold of keep_pr_threshold
 
 Here is how keep_pr_threshold affects steering angle distribution in data after the other augmentation techniques described above:
-![alt tag](report_resources/keep_pr_threshold_0_5.png)
-![alt tag](report_resources/keep_pr_threshold_0_9.png)
-![alt tag](report_resources/keep_pr_threshold_0.png)
-<IMAGE>
+![alt tag](report_resources/keep_pr_threshold_analysis.png)
 
 Here are some sample images after following the augmentation I described above:
 ![alt tag](report_resources/sample_images_augmentation.png)
 
 * I use 5x as many input images (i.e around 40K images) from generator to train the model
 * I trained model with 5 epochs and pr_threshold=0.5, 0.9, 0.0. I also added capability to read a pre-trained model from last iteration and train that model, similar to transfer learning. This helped me converge faster as I added more augmentation logic.
+* I have another generator for validation data. This generator only uses center image and normalizes the image (crop top and bottom, resize, and normalize RGB values to [-0.5, 0.5]). This simulated the images used in drive mode by the simulator.
 
+## Modifications to drive.py :
+I modified the drive.py to limit the car speed to 15MPH. Also, I normalize the image by calling the normalization method used while building training data.
 
+## Results:
+Here's a video of how my model performs on track 1 (for which we have training data) and track 2 (challenge track).
+https://youtu.be/Qnh9jU6xec0
 
+* The model works well at the turns.
+* However when road is straight, the model constantly keeps correcting by weaving left and right
+* Although I didn't use any training data from the challenge track, the model seems to perform very well on this track. This is because of the noise I added by introducing shadows and random brightness to training data.
 
-
-
-
-
-
-
-#References
-
+## References
 [1]https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
 [2]Link to Udacity data
 [3]Link to comma.ai model
