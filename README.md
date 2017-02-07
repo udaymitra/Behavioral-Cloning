@@ -3,6 +3,20 @@
 ## Problem Definition
 This project is an attempt at using Deep CNNs to teach a car how to drive itself. In particular, the model we are training will predict steering angle. I am using training data provided by Udacity. The training data is collected by driving car in a simulator and collecting images captured by cameras mounted at the center, left and right side of the car, along with the steering adjustment.
 
+## Files
+My project includes the following files:
+* model.py - script to create and train the model
+* drive.py - for driving the car in autonomous mode
+* model.h5 - trained convolution neural network
+* writeup_report.md - summarizing the results
+* data_visualization.py - code used to visualize data
+* input_reader_helper.py - helper code to read images from csv and also generator
+* image_util.py - helper code to process images
+
+## How to run
+The car can be driven autonomously around the track by executing
+```python drive.py model.h5```
+
 ## Data understanding and visualization
 There are about 8000 frames in the dataset. For each entry, we have image captured by center, left and right camera. Following are 3 such examples. First row is when car is going straight (steering = 0), second row is for left turn, and third row is for right turn.
 ![alt tag](report_resources/sample_images_original.png)
@@ -33,7 +47,7 @@ Here is the architecture diagram:
 
 ![alt tag](report_resources/nvidia_arch_diagram.png)
 
-## Data Augmentation
+## Data Augmentation and Training Strategy
 8K samples is not enough to train a model as complicated as described in NVIDIA paper. I tried to augment data by building my own training/recovery data using simulator. However I got better results by using just the udacity data and augmenting it. Eventually I trained with around 40K samples post augmentation.
 
 I followed some techniques mentioned in NVIDIA paper and some from CarND forum, which was very helpful.
@@ -57,6 +71,13 @@ Here are some sample images after following the augmentation I described above:
 * I trained model with 5 epochs and pr_threshold=0.5, 0.9, 0.0. I also added capability to read a pre-trained model from last iteration and train that model, similar to transfer learning. This helped me converge faster as I added more augmentation logic.
 * I have another generator for validation data. This generator only uses center image and normalizes the image (crop top and bottom, resize, and normalize RGB values to [-0.5, 0.5]). This simulated the images used in drive mode by the simulator.
 
+## Attempts to reduce overfitting in the model
+* I am adding noise to images in the form of random brightness, random shadows, flipping image, and randomly picking left, right and center images. Adding this noise and augmenting data is a deliberate attempt to reduce over fitting.
+* Validation data set uses only center image without any augmentation. Because there is no noise in this dataset, there is a very low likelihood that images in validation set are present in training set. In a way, the model was trained and validated on different data sets to ensure that the model was not overfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track. I also tested the model on challenge track and I didnt use images from this track for training purposes.
+
+## Model parameter tuning
+The model used an adam optimizer, so the learning rate was not tuned manually.
+
 ## Modifications to drive.py :
 I modified the drive.py to limit the car speed to 15MPH. Also, I normalize the image by calling the normalization method used while building training data.
 
@@ -66,7 +87,7 @@ Here's a video of how my model performs on track 1 (for which we have training d
 Demo video (https://youtu.be/Qnh9jU6xec0)
 
 * The model works well at the turns.
-* However when road is straight, the model constantly keeps correcting by weaving left and right
+* However when road is straight, the model keeps correcting slightly by weaving left and right.
 * Although I didn't use any training data from the challenge track, the model seems to perform very well on this track. This is because of the noise I added by introducing shadows and random brightness to training data.
 
 ## References
